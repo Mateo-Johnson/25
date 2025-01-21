@@ -1,0 +1,11 @@
+THIS IS THE FILE WHERE ALL OF THE LIGHT PATTERNS ARE GONNA BE KEPT (pulsing = slow flash)
+- intaking coral | flashing yellow ✓
+- intaking algae | flashing yellow
+- coral stored | solid green ✓
+- algae stored | solid green
+- elevator moving | yellow
+- autonomous | pulsing light blue
+- endgame | pulsing orange
+- aligning (vision) | flashing blue
+- aligned (vision) | solid blue
+- error | flashing red
