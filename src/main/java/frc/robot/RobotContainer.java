@@ -27,7 +27,7 @@ public class RobotContainer {
     private final Lights lights = new Lights();  // Lights Subsystem
     private final Coral coral = new Coral(); // Coral Subsystem
     private final Algae algae = new Algae(); // Algae Subsystem
-    private final Vision vision = new Vision(drivetrain); // Vision Subsystem
+    // private final Vision vision = new Vision(drivetrain); // Vision Subsystem
 
     // The driver's controller
     public static final CommandXboxController primary = new CommandXboxController(OIConstants.primaryPort);
