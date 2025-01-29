@@ -76,7 +76,6 @@ public final class Constants {
 
   public static final class OIConstants {
     public static final int primaryPort = 0;
-    public static final int secondaryPort = 1; // Do we even need a secondary? Who knows
     public static final double driveDeadband = 0.05;
   }
 
@@ -97,52 +96,6 @@ public final class Constants {
   public static final class NeoMotorConstants {
     public static final double freeSpeedRpm = 5676;
   }
-
-  // public static class ElevatorConstants {
-    // public static final int leftElevatorID = 1;
-    // public static final int rightElevatorID = 2;
-    // public static final int limitSwitchPort = 0;
-
-    // // PID Values
-    // public static final double kP = 0.00001;
-    // public static final double kI = 0.0;
-    // public static final double kD = 0.0;
-    // public static final double kIz = 0.0;
-    // public static final double kFF = 0.0;
-    // public static final double kS = 0.0; // Static friction
-    // public static final double kG = 0.0; // Gravity feed forward
-    // public static final double kV = 0.0; // Velocity feed forward
-    // public static final double kA = 0.0; // Acceleration feed forward
-
-    // // Mechanism constants
-    // public static final double gearRatio = 100.0;
-    // public static final double encoderCountsPerRev = 42.0;
-    // public static final double sprocketTeech = 22.0;
-    // public static final double chainPitch = 0.25; // Given by the number in the chain (we use #25)
-    
-    // // Calculated constants
-    // public static final double inchesPerSprocketRotation = sprocketTeech * chainPitch;
-    // public static final double countsPerSprocketRotation = encoderCountsPerRev * gearRatio;
-    // public static final double countsPerInch = countsPerSprocketRotation / inchesPerSprocketRotation;
-
-    // // Position setpoints in inches
-    // public static final double downPos = 0.0;
-    // public static final double L1 = 12.0;
-    // public static final double Intake = 14;
-    // public static final double L2 = 24.0;
-    // public static final double L3 = 36.0;
-    // public static final double L4 = 48.0;
-    // public static final double posTolerance = 0.5;
-    // public static final double bottomPos = 0.1; // CHANGE THIS
-    
-
-    // // Safety limits
-    // public static final double max_output = 0.5;
-    // public static final double minPos = downPos;
-    // public static final double maxPos = 50.0;
-    // public static final double maxVelocity = 30.0;
-    // public static final double maxAcceleration = 20.0; 
-  // }
 
   public static class AlgaeConstants {
     public static final int topAlgaeID = 18;
@@ -190,6 +143,7 @@ public final class Constants {
   public final class ElevatorConstants {
     // Hardware
     public static int switchPort = 0;
+    public static final int lasersharkPort = 0; //DIO
 
     // Control
     public static  ProfiledPIDController profiledPIDController;

@@ -2,6 +2,7 @@ package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.utils.Constants.ElevatorConstants;
+import frc.robot.utils.Lasershark;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -10,6 +11,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkMax;
+import edu.wpi.first.math.filter.LinearFilter;
 
 public class Elevator extends SubsystemBase {
     // Hardware
@@ -17,6 +19,14 @@ public class Elevator extends SubsystemBase {
     private final SparkMax followMotor;
     private final RelativeEncoder encoder;
     private final DigitalInput limitSwitch;
+    private final Lasershark heightSensor;
+
+    // Sensor Fusion
+    private final LinearFilter laserFilter;
+    private boolean useLasershark = true;
+    private double laserOffset = 0.0; // Distance from Lasershark to ground/reference point
+    private double lastValidLaserReading = 0.0;
+    private static final double MAX_LASER_DEVIATION = 2.0; // inches
 
     // Control
     private final ProfiledPIDController profiledPIDController;
@@ -27,7 +37,7 @@ public class Elevator extends SubsystemBase {
 
     // Constants
     private static final double gearRatio = ElevatorConstants.gearRatio;
-    private static final double SPD = ElevatorConstants.SPD; // 22T #25 sprocket in inches
+    private static final double SPD = ElevatorConstants.SPD;
     private static final double IPR = Math.PI * SPD;
     private static final double PCF = IPR / gearRatio;
     
@@ -37,11 +47,10 @@ public class Elevator extends SubsystemBase {
     private static final double L2 = ElevatorConstants.L2;
     private static final double L3 = ElevatorConstants.L3;
     private static final double L4 = ElevatorConstants.L4;
-
     
     // Motion Profile Constraints
-    private static final double maxV = ElevatorConstants.maxV; // inches per second
-    private static final double maxA = ElevatorConstants.maxA; // inches per second squared
+    private static final double maxV = ElevatorConstants.maxV;
+    private static final double maxA = ElevatorConstants.maxA;
     
     // PID Constants
     private static final double prof_kP = ElevatorConstants.prof_kP;
@@ -53,15 +62,20 @@ public class Elevator extends SubsystemBase {
     private static final double stay_kD = ElevatorConstants.stay_kD;
     
     // Manual Control
-    private static final double max = ElevatorConstants.max; // max height | inches - slightly above highest setpoint
+    private static final double max = ElevatorConstants.max;
 
     public Elevator() {
         // Initialize hardware
         leaderMotor = new SparkMax(ElevatorConstants.leadID, MotorType.kBrushless);
         followMotor = new SparkMax(ElevatorConstants.followID, MotorType.kBrushless);
         encoder = leaderMotor.getEncoder();
-        limitSwitch = new DigitalInput(ElevatorConstants.switchPort); // Update port as needed
-
+        limitSwitch = new DigitalInput(ElevatorConstants.switchPort);
+        heightSensor = new Lasershark(ElevatorConstants.lasersharkPort); // Add this to Constants
+        
+        // Initialize laser filter (5-sample moving average)
+        laserFilter = LinearFilter.movingAverage(5);
+        heightSensor.setFilterEnabled(true); // Enable internal median filtering
+        
         // Configure second motor as follower
         SparkMaxConfig followConfig = new SparkMaxConfig();
         followConfig.follow(leaderMotor, false);
@@ -70,7 +84,6 @@ public class Elevator extends SubsystemBase {
         SparkMaxConfig encoderConfig = new SparkMaxConfig();
         encoderConfig.encoder.positionConversionFactor(PCF);
         encoderConfig.encoder.velocityConversionFactor(PCF / 60.0);
-
         
         // Configure motion profiling
         TrapezoidProfile.Constraints constraints = 
@@ -84,6 +97,7 @@ public class Elevator extends SubsystemBase {
             
         // Set initial position
         resetEncoders();
+        calibrateLaserOffset();
     }
     
     @Override
@@ -93,6 +107,9 @@ public class Elevator extends SubsystemBase {
             resetEncoders();
         }
         
+        // Update position using sensor fusion
+        updatePosition();
+        
         // Only apply PID control if not in manual mode
         if (!isManualControl) {
             double output = profiledPIDController.calculate(
@@ -101,7 +118,55 @@ public class Elevator extends SubsystemBase {
         }
     }
     
-    // D-Pad Control Methods
+    private void updatePosition() {
+        if (useLasershark && heightSensor.isValidReading()) {
+            double laserReading = getLaserHeight();
+            
+            // Check if reading is reasonable compared to encoder
+            if (Math.abs(laserReading - encoder.getPosition()) < MAX_LASER_DEVIATION) {
+                lastValidLaserReading = laserReading;
+                // Gradually adjust encoder position based on laser reading
+                encoder.setPosition(encoder.getPosition() * 0.95 + laserReading * 0.05);
+            }
+        }
+    }
+    
+    private double getLaserHeight() {
+        // Convert laser distance to height (accounting for mounting offset)
+        return laserFilter.calculate(heightSensor.getDistanceInches() - laserOffset);
+    }
+    
+    /**
+     * Calibrate the laser offset when the elevator is at a known position
+     * (preferably at the bottom limit switch)
+     */
+    public void calibrateLaserOffset() {
+        if (heightSensor.isValidReading()) {
+            // If at limit switch, we know we're at position 0
+            if (isAtLowerLimit()) {
+                laserOffset = heightSensor.getDistanceInches();
+            }
+        }
+    }
+    
+    /**
+     * Enable or disable Lasershark height sensing
+     */
+    public void setUseLasershark(boolean enable) {
+        useLasershark = enable;
+    }
+    
+    /**
+     * Get the current height as measured by the Lasershark
+     */
+    public double getLasersharkHeight() {
+        if (heightSensor.isValidReading()) {
+            return getLaserHeight();
+        }
+        return lastValidLaserReading;
+    }
+    
+    // D-Pad Control Methods remain the same
     public void L1() {
         setTargetPosition(L1);
     }
@@ -165,7 +230,7 @@ public class Elevator extends SubsystemBase {
     }
     
     public boolean isAtLowerLimit() {
-        return !limitSwitch.get(); // Return true if switch is closed (reads 0)
+        return !limitSwitch.get();
     }
     
     public double getPosition() {
@@ -176,5 +241,6 @@ public class Elevator extends SubsystemBase {
         encoder.setPosition(0.1);
         profiledPIDController.reset(0.1);
         currentSetpoint = 0.1;
+        calibrateLaserOffset(); // Recalibrate laser when resetting
     }
 }
