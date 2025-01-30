@@ -20,8 +20,8 @@ public class Lasershark implements Sendable {
     private double lastValidReading = 0.0;
     private double lastReadingTime = 0.0;
     private boolean filterEnabled = false;
-    private static final double MIN_VALID_DISTANCE_INCHES = 2.0; // Min spec is 2 inches
-    private static final double MAX_VALID_DISTANCE_INCHES = 144.0; // Max spec is 12 feet
+    private static final double min_valid = 2.0; // Min spec is 2 inches
+    private static final double max_valid = 144.0; // Max spec is 12 feet
     
     // Movement detection thresholds
     private static final double MOVEMENT_THRESHOLD_INCHES = 1.0;
@@ -63,7 +63,7 @@ public class Lasershark implements Sendable {
      */
     public boolean isValidReading() {
         double distance = getDistanceInches();
-        return distance >= MIN_VALID_DISTANCE_INCHES && distance <= MAX_VALID_DISTANCE_INCHES;
+        return distance >= min_valid && distance <= max_valid;
     }
 
     /**
