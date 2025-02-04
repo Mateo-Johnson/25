@@ -29,13 +29,13 @@ public class TurnAngle extends Command {
   @Override
   public void execute() {
     currentAngle = drivetrain.getHeading();
-    drivetrain.drive(0, 0, turnPID.calculate(currentAngle, targetAngle), false);
+    drivetrain.drive(0, 0, turnPID.calculate(currentAngle, targetAngle), true);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    drivetrain.drive(0, 0, 0, false);
+    drivetrain.drive(0, 0, 0, true);
   }
 
   // Returns true when the command should end.

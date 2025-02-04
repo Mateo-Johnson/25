@@ -2,11 +2,11 @@ package frc.robot.subsystems.vision.commands.reef;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.utils.ComboDetector;
+import frc.robot.utils.LimelightLib;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.commands.MoveToSetpoint;
-import frc.robot.utils.ComboDetector;
-import frc.robot.utils.LimelightLib;
 
 public class AlignReef extends Command {
   // Subsystems and utilities
@@ -95,18 +95,19 @@ public class AlignReef extends Command {
 
     // Ensure we have a valid target
     if (tID != 0) {
+      // Calculate drive adjustments using PID
+      double horizontalAdjustment = horizontalPID.calculate(tX, 0);
+      double verticalAdjustment = verticalPID.calculate(tY, 0);
 
       // Determine side-to-side adjustment based on alignment preference
-      double sideAdjustment = alignToLeft ? 6.47 : -6.47; // Adjust magnitude as needed
-      // Calculate drive adjustments using PID
-      double horizontalAdjustment = horizontalPID.calculate(tX, (0 + sideAdjustment));
+      double sideAdjustment = alignToLeft ? -0.1 : 0.1; // Adjust magnitude as needed
 
       // Drive adjustments
       driveSubsystem.drive(
-        0,
-        horizontalAdjustment,
+        Math.min(horizontalAdjustment, MAX_DRIVE_SPEED),
+        sideAdjustment,
         0, //Rotation
-        false 
+        true 
       );
     }
   }
