@@ -15,6 +15,31 @@ public class ComboDetector {
     }
     
     /**
+     * Get the underlying CommandXboxController
+     * @return The CommandXboxController
+     */
+    public CommandXboxController getController() {
+        return controller;
+    }
+    
+    /**
+     * Get the current D-Pad angle
+     * @return The D-Pad angle (-1 if not pressed, 0-360 otherwise)
+     */
+    public int getDPadAngle() {
+        return controller.getHID().getPOV();
+    }
+    
+    /**
+     * Check if a specific D-Pad direction is pressed
+     * @param angle The angle to check (0 = Up, 90 = Right, 180 = Down, 270 = Left)
+     * @return true if the specified D-Pad direction is pressed
+     */
+    public boolean isDPadPressed(int angle) {
+        return controller.getHID().getPOV() == angle;
+    }
+    
+    /**
      * Detects if a D-Pad button is pressed followed by a right stick flick
      * within the combo timeout window.
      * @return -1 for left flick combo, 1 for right flick combo, 0 for no combo
@@ -62,7 +87,11 @@ public class ComboDetector {
         return 0;
     }
     
-    // Alternative method using CommandXboxController's trigger bindings
+    /**
+     * Alternative method using CommandXboxController's trigger bindings
+     * @param onLeftFlick Runnable to execute on left flick
+     * @param onRightFlick Runnable to execute on right flick
+     */
     public void bindComboTriggers(Runnable onLeftFlick, Runnable onRightFlick) {
         // Create a trigger that activates when the combo is detected
         controller.povCenter()

@@ -17,7 +17,7 @@ public class MoveToSetpoint extends Command {
     public void initialize() {
         if (setpoint == "L1") {
             elevator.L1();
-        } else if (setpoint == "Intake") {
+        } else if (setpoint == "HP") {
             elevator.intake();
         } else if (setpoint == "L2") {
             elevator.L2();
